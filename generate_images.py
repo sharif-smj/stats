@@ -50,7 +50,9 @@ def contribution_fill(day: dict) -> str:
     return "#161b22"
 
 
-def contribution_month_labels(weeks: list, graph_left: int, step: int) -> str:
+def contribution_month_labels(
+    weeks: list, graph_left: int, step: int, label_y: int
+) -> str:
     """
     Render compact month labels above a contribution calendar.
     """
@@ -73,7 +75,7 @@ def contribution_month_labels(weeks: list, graph_left: int, step: int) -> str:
                 continue
 
             labels.append(
-                f'<text class="month" x="{x}" y="54">{date.strftime("%b")}</text>'
+                f'<text class="month" x="{x}" y="{label_y}">{date.strftime("%b")}</text>'
             )
             seen.add(month_key)
             last_x = x
@@ -90,19 +92,19 @@ def render_contribution_calendar(calendar: dict) -> str:
     total = int(calendar.get("totalContributions", 0))
 
     width = 960
-    height = 216
+    height = 164
     graph_left = 86
-    graph_top = 78
+    graph_top = 48
     cell = 12
     gap = 4
     step = cell + gap
 
-    month_labels = contribution_month_labels(weeks, graph_left, step)
+    month_labels = contribution_month_labels(weeks, graph_left, step, 28)
     weekday_labels = "\n".join(
         [
-            '<text class="weekday" x="24" y="102">Mon</text>',
-            '<text class="weekday" x="24" y="134">Wed</text>',
-            '<text class="weekday" x="24" y="166">Fri</text>',
+            '<text class="weekday" x="24" y="72">Mon</text>',
+            '<text class="weekday" x="24" y="104">Wed</text>',
+            '<text class="weekday" x="24" y="136">Fri</text>',
         ]
     )
 
@@ -120,34 +122,18 @@ def render_contribution_calendar(calendar: dict) -> str:
                 f'rx="3" fill="{color}"><title>{date}: {count} contributions</title></rect>'
             )
 
-    legend_x = width - 224
-    legend_y = height - 39
-    legend_colors = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"]
-    legend_cells = []
-    for index, color in enumerate(legend_colors):
-        legend_cells.append(
-            f'<rect x="{legend_x + 48 + index * 18}" y="{legend_y - 12}" '
-            f'width="12" height="12" rx="3" fill="{color}"></rect>'
-        )
-
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{total:,} contributions in the last year">
 <style>
   .bg {{ fill: #0d1117; }}
   .border {{ fill: none; stroke: #30363d; stroke-width: 1; }}
-  .title {{ fill: #f0f6fc; font: 700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
-  .month, .weekday, .legend {{ fill: #c9d1d9; font: 600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
-  .legend {{ fill: #8b949e; }}
+  .month, .weekday {{ fill: #c9d1d9; font: 600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
   .day {{ shape-rendering: geometricPrecision; }}
 </style>
 <rect class="bg" x="0" y="0" width="{width}" height="{height}" rx="8"></rect>
 <rect class="border" x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="8"></rect>
-<text class="title" x="24" y="34">{total:,} contributions in the last year</text>
 {month_labels}
 {weekday_labels}
 {''.join(cells)}
-<text class="legend" x="{legend_x}" y="{legend_y}">Less</text>
-{''.join(legend_cells)}
-<text class="legend" x="{legend_x + 148}" y="{legend_y}">More</text>
 </svg>
 """
 

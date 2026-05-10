@@ -144,9 +144,10 @@ class GenerateOverviewTests(unittest.IsolatedAsyncioTestCase):
             finally:
                 os.chdir(previous)
 
-        self.assertIn("3,044 contributions in the last year", output)
+        self.assertIn('aria-label="3,044 contributions in the last year"', output)
         self.assertIn(">May<", output)
-        self.assertIn(">Less<", output)
-        self.assertIn(">More<", output)
+        self.assertNotIn(">Less<", output)
+        self.assertNotIn(">More<", output)
+        self.assertNotIn("3,044 contributions in the last year</text>", output)
         self.assertIn("#0d1117", output)
         self.assertIn("2026-05-04: 2 contributions", output)
