@@ -8,10 +8,6 @@ from datetime import datetime, timezone
 import aiohttp
 
 from github_stats import Stats
-from recent_code_languages import (
-    collect_recent_code_language_payload,
-    write_recent_code_language_outputs,
-)
 
 
 ################################################################################
@@ -119,15 +115,6 @@ async def generate_kpis(s: Stats) -> None:
         f.write(output)
 
 
-async def generate_recent_code_languages(s: Stats) -> None:
-    """
-    Generate recent code-language JSON and preview SVG from changed code lines.
-    :param s: Represents user's GitHub statistics
-    """
-    payload = await collect_recent_code_language_payload(s)
-    write_recent_code_language_outputs(payload)
-
-
 ################################################################################
 # Main Function
 ################################################################################
@@ -171,7 +158,6 @@ async def main() -> None:
         await generate_languages(s)
         await generate_overview(s)
         await generate_kpis(s)
-        await generate_recent_code_languages(s)
 
 
 if __name__ == "__main__":
