@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-10T08:03:53Z",
+  "generated_at": "2026-05-10T08:06:44Z",
   "window_days": 365,
   "metric": "changed_lines",
   "languages": [
@@ -14,14 +14,14 @@
       "changes": 72036
     },
     {
+      "name": "Python",
+      "color": "#3572A5",
+      "changes": 50123
+    },
+    {
       "name": "Dart",
       "color": "#00B4AB",
       "changes": 50046
-    },
-    {
-      "name": "Python",
-      "color": "#3572A5",
-      "changes": 49658
     },
     {
       "name": "JavaScript",
@@ -54,5 +54,5 @@
       "changes": 150
     }
   ],
-  "excluded_changes": 2282494
+  "excluded_changes": 2282561
 }
