@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from generate_images import generate_overview
+from generate_images import generate_kpis, generate_overview
 
 
 class FakeStats:
@@ -32,6 +32,14 @@ class FakeStats:
     @property
     async def repos(self):
         return {"sharif-smj/stats", "sharif-smj/gemini-image-describer"}
+
+    @property
+    async def followers(self):
+        return 19
+
+    @property
+    async def public_repos(self):
+        return 64
 
     @property
     async def lines_changed(self):
@@ -64,3 +72,30 @@ class GenerateOverviewTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Last updated", output)
         self.assertNotIn("Lines of code changed", output)
         self.assertNotIn("Repository views", output)
+
+    async def test_kpis_excludes_language_content(self):
+        repo_root = os.path.dirname(os.path.dirname(__file__))
+        with tempfile.TemporaryDirectory() as tmp:
+            previous = os.getcwd()
+            try:
+                os.chdir(tmp)
+                os.symlink(os.path.join(repo_root, "templates"), "templates")
+
+                await generate_kpis(FakeStats())
+
+                with open("generated/kpis.svg", "r") as f:
+                    output = f.read()
+            finally:
+                os.chdir(previous)
+
+        self.assertIn("CONTRIBUTIONS", output)
+        self.assertIn(">3,018<", output)
+        self.assertIn("CONTRIBUTION REPOS", output)
+        self.assertIn(">2<", output)
+        self.assertIn("FOLLOWERS", output)
+        self.assertIn(">19<", output)
+        self.assertIn("PUBLIC REPOS", output)
+        self.assertIn(">64<", output)
+        self.assertNotIn("Languages", output)
+        self.assertNotIn("Kotlin", output)
+        self.assertNotIn("Python", output)

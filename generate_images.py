@@ -92,6 +92,29 @@ fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8z"></path></svg>
         f.write(output)
 
 
+async def generate_kpis(s: Stats) -> None:
+    """
+    Generate a compact dashboard card with profile-level KPIs.
+    :param s: Represents user's GitHub statistics
+    """
+    with open("templates/kpis.svg", "r") as f:
+        output = f.read()
+
+    output = re.sub("{{ contributions }}", f"{await s.total_contributions:,}", output)
+    output = re.sub("{{ repos }}", f"{len(await s.repos):,}", output)
+    output = re.sub("{{ stars }}", f"{await s.stargazers:,}", output)
+    output = re.sub("{{ forks }}", f"{await s.forks:,}", output)
+    output = re.sub("{{ followers }}", f"{await s.followers:,}", output)
+    output = re.sub("{{ public_repos }}", f"{await s.public_repos:,}", output)
+    output = re.sub(
+        "{{ updated }}", datetime.now(timezone.utc).strftime("%Y-%m-%d"), output
+    )
+
+    generate_output_folder()
+    with open("generated/kpis.svg", "w") as f:
+        f.write(output)
+
+
 ################################################################################
 # Main Function
 ################################################################################
@@ -131,7 +154,10 @@ async def main() -> None:
             exclude_langs=excluded_langs,
             ignore_forked_repos=ignore_forked_repos,
         )
-        await asyncio.gather(generate_languages(s), generate_overview(s))
+        await s.get_stats()
+        await generate_languages(s)
+        await generate_overview(s)
+        await generate_kpis(s)
 
 
 if __name__ == "__main__":

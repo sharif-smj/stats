@@ -127,6 +127,12 @@ class Queries(object):
   viewer {{
     login,
     name,
+    followers {{
+      totalCount
+    }}
+    publicRepositories: repositories(privacy: PUBLIC) {{
+      totalCount
+    }}
     repositories(
         first: 100,
         orderBy: {{
@@ -273,6 +279,8 @@ class Stats(object):
         self._repos: Optional[Set[str]] = None
         self._lines_changed: Optional[Tuple[int, int]] = None
         self._views: Optional[int] = None
+        self._followers: Optional[int] = None
+        self._public_repos: Optional[int] = None
 
     async def to_str(self) -> str:
         """
@@ -323,6 +331,18 @@ Languages:
                     .get("viewer", {})
                     .get("login", "No Name")
                 )
+            self._followers = (
+                raw_results.get("data", {})
+                .get("viewer", {})
+                .get("followers", {})
+                .get("totalCount", 0)
+            )
+            self._public_repos = (
+                raw_results.get("data", {})
+                .get("viewer", {})
+                .get("publicRepositories", {})
+                .get("totalCount", 0)
+            )
 
             contrib_repos = (
                 raw_results.get("data", {})
@@ -473,6 +493,28 @@ Languages:
                 "totalContributions", 0
             )
         return cast(int, self._total_contributions)
+
+    @property
+    async def followers(self) -> int:
+        """
+        :return: count of GitHub followers
+        """
+        if self._followers is not None:
+            return self._followers
+        await self.get_stats()
+        assert self._followers is not None
+        return self._followers
+
+    @property
+    async def public_repos(self) -> int:
+        """
+        :return: count of public repositories on the profile
+        """
+        if self._public_repos is not None:
+            return self._public_repos
+        await self.get_stats()
+        assert self._public_repos is not None
+        return self._public_repos
 
     @property
     async def lines_changed(self) -> Tuple[int, int]:
