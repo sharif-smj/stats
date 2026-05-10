@@ -1,8 +1,9 @@
+import json
 import os
 import tempfile
 import unittest
 
-from generate_images import generate_kpis, generate_overview
+from generate_images import generate_kpis, generate_overview, generate_recent_code_languages
 
 
 class FakeStats:
@@ -48,6 +49,32 @@ class FakeStats:
     @property
     async def views(self):
         raise AssertionError("generate_overview should not query traffic views")
+
+
+class FakeRecentCodeQueries:
+    async def query_rest(self, path, params=None):
+        if path == "/repos/sharif-smj/app/commits":
+            if params.get("page") == 1:
+                return [{"sha": "abc123"}]
+            return []
+        if path == "/repos/sharif-smj/app/commits/abc123":
+            return {
+                "files": [
+                    {"filename": "Main.kt", "additions": 30, "deletions": 2},
+                    {"filename": "worker.py", "additions": 15, "deletions": 1},
+                    {"filename": "index.html", "additions": 300, "deletions": 50},
+                ]
+            }
+        return []
+
+
+class FakeRecentCodeStats:
+    username = "sharif-smj"
+    queries = FakeRecentCodeQueries()
+
+    @property
+    async def repos(self):
+        return {"sharif-smj/app"}
 
 
 class GenerateOverviewTests(unittest.IsolatedAsyncioTestCase):
@@ -99,3 +126,24 @@ class GenerateOverviewTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("Languages", output)
         self.assertNotIn("Kotlin", output)
         self.assertNotIn("Python", output)
+
+    async def test_recent_code_language_generation_writes_json_and_preview_svg(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            previous = os.getcwd()
+            try:
+                os.chdir(tmp)
+
+                await generate_recent_code_languages(FakeRecentCodeStats())
+
+                with open("generated/recent-code-languages.json", "r") as f:
+                    payload = json.load(f)
+                with open("generated/recent-code-languages.svg", "r") as f:
+                    svg = f.read()
+            finally:
+                os.chdir(previous)
+
+        self.assertEqual(payload["metric"], "changed_lines")
+        self.assertEqual(payload["languages"][0]["name"], "Kotlin")
+        self.assertEqual(payload["languages"][0]["changes"], 32)
+        self.assertEqual(payload["languages"][1]["name"], "Python")
+        self.assertNotIn("HTML", svg)

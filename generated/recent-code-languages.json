@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-05-10T08:03:53Z",
+  "window_days": 365,
+  "metric": "changed_lines",
+  "languages": [
+    {
+      "name": "Kotlin",
+      "color": "#A97BFF",
+      "changes": 942551
+    },
+    {
+      "name": "TypeScript",
+      "color": "#3178c6",
+      "changes": 72036
+    },
+    {
+      "name": "Dart",
+      "color": "#00B4AB",
+      "changes": 50046
+    },
+    {
+      "name": "Python",
+      "color": "#3572A5",
+      "changes": 49658
+    },
+    {
+      "name": "JavaScript",
+      "color": "#f1e05a",
+      "changes": 4280
+    },
+    {
+      "name": "Rust",
+      "color": "#dea584",
+      "changes": 2085
+    },
+    {
+      "name": "Shell",
+      "color": "#89e051",
+      "changes": 1450
+    },
+    {
+      "name": "Objective-C",
+      "color": "#444444",
+      "changes": 299
+    },
+    {
+      "name": "Swift",
+      "color": "#F05138",
+      "changes": 222
+    },
+    {
+      "name": "Go",
+      "color": "#00ADD8",
+      "changes": 150
+    }
+  ],
+  "excluded_changes": 2282494
+}
