@@ -34,7 +34,7 @@
 
 <circle class="blue" cx="52" cy="49" r="6"/>
 <text class="label" x="68" y="54">CONTRIBUTIONS</text>
-<text class="value" x="50" y="91">5,179</text>
+<text class="value" x="50" y="91">5,180</text>
 
 <circle class="purple" cx="331" cy="49" r="6"/>
 <text class="label" x="347" y="54">CONTRIBUTION REPOS</text>
