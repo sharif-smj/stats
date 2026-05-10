@@ -250,6 +250,33 @@ query {{
 }}
 """
 
+    @staticmethod
+    def contribution_calendar() -> str:
+        """
+        :return: GraphQL query to get the user's last-year contribution calendar
+        """
+        return """
+query {
+  viewer {
+    contributionsCollection {
+      contributionCalendar {
+        totalContributions
+        weeks {
+          firstDay
+          contributionDays {
+            color
+            contributionCount
+            contributionLevel
+            date
+            weekday
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
 
 class Stats(object):
     """
@@ -281,6 +308,7 @@ class Stats(object):
         self._views: Optional[int] = None
         self._followers: Optional[int] = None
         self._public_repos: Optional[int] = None
+        self._contribution_calendar: Optional[Dict[str, Any]] = None
 
     async def to_str(self) -> str:
         """
@@ -493,6 +521,23 @@ Languages:
                 "totalContributions", 0
             )
         return cast(int, self._total_contributions)
+
+    @property
+    async def contribution_calendar(self) -> Dict:
+        """
+        :return: last-year GitHub contribution calendar data
+        """
+        if self._contribution_calendar is not None:
+            return self._contribution_calendar
+
+        self._contribution_calendar = (
+            (await self.queries.query(Queries.contribution_calendar()))
+            .get("data", {})
+            .get("viewer", {})
+            .get("contributionsCollection", {})
+            .get("contributionCalendar", {})
+        )
+        return self._contribution_calendar
 
     @property
     async def followers(self) -> int:

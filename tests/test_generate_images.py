@@ -2,7 +2,7 @@ import os
 import tempfile
 import unittest
 
-from generate_images import generate_kpis, generate_overview
+from generate_images import generate_contributions, generate_kpis, generate_overview
 
 
 class FakeStats:
@@ -40,6 +40,37 @@ class FakeStats:
     @property
     async def public_repos(self):
         return 64
+
+    @property
+    async def contribution_calendar(self):
+        return {
+            "totalContributions": 3044,
+            "weeks": [
+                {
+                    "firstDay": "2026-05-03",
+                    "contributionDays": [
+                        {
+                            "date": "2026-05-03",
+                            "weekday": 0,
+                            "contributionCount": 0,
+                            "contributionLevel": "NONE",
+                        },
+                        {
+                            "date": "2026-05-04",
+                            "weekday": 1,
+                            "contributionCount": 2,
+                            "contributionLevel": "FIRST_QUARTILE",
+                        },
+                        {
+                            "date": "2026-05-05",
+                            "weekday": 2,
+                            "contributionCount": 9,
+                            "contributionLevel": "THIRD_QUARTILE",
+                        },
+                    ],
+                }
+            ],
+        }
 
     @property
     async def lines_changed(self):
@@ -99,3 +130,23 @@ class GenerateOverviewTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("Languages", output)
         self.assertNotIn("Kotlin", output)
         self.assertNotIn("Python", output)
+
+    async def test_contribution_calendar_renders_dark_heatmap(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            previous = os.getcwd()
+            try:
+                os.chdir(tmp)
+
+                await generate_contributions(FakeStats())
+
+                with open("generated/contributions.svg", "r") as f:
+                    output = f.read()
+            finally:
+                os.chdir(previous)
+
+        self.assertIn("3,044 contributions in the last year", output)
+        self.assertIn(">May<", output)
+        self.assertIn(">Less<", output)
+        self.assertIn(">More<", output)
+        self.assertIn("#0d1117", output)
+        self.assertIn("2026-05-04: 2 contributions", output)

@@ -4,6 +4,7 @@ import asyncio
 import os
 import re
 from datetime import datetime, timezone
+from html import escape
 
 import aiohttp
 
@@ -21,6 +22,134 @@ def generate_output_folder() -> None:
     """
     if not os.path.isdir("generated"):
         os.mkdir("generated")
+
+
+def contribution_fill(day: dict) -> str:
+    """
+    Return a dark-mode GitHub contribution color for a calendar day.
+    """
+    level = day.get("contributionLevel")
+    if level == "FIRST_QUARTILE":
+        return "#0e4429"
+    if level == "SECOND_QUARTILE":
+        return "#006d32"
+    if level == "THIRD_QUARTILE":
+        return "#26a641"
+    if level == "FOURTH_QUARTILE":
+        return "#39d353"
+
+    count = int(day.get("contributionCount", 0))
+    if count >= 15:
+        return "#39d353"
+    if count >= 8:
+        return "#26a641"
+    if count >= 4:
+        return "#006d32"
+    if count >= 1:
+        return "#0e4429"
+    return "#161b22"
+
+
+def contribution_month_labels(weeks: list, graph_left: int, step: int) -> str:
+    """
+    Render compact month labels above a contribution calendar.
+    """
+    labels = []
+    seen = set()
+    last_x = -100
+
+    for week_index, week in enumerate(weeks):
+        for day in week.get("contributionDays", []):
+            raw_date = day.get("date")
+            if not raw_date:
+                continue
+            date = datetime.fromisoformat(raw_date)
+            month_key = (date.year, date.month)
+            if month_key in seen or (week_index != 0 and date.day > 7):
+                continue
+
+            x = graph_left + week_index * step
+            if x - last_x < 44:
+                continue
+
+            labels.append(
+                f'<text class="month" x="{x}" y="54">{date.strftime("%b")}</text>'
+            )
+            seen.add(month_key)
+            last_x = x
+            break
+
+    return "\n".join(labels)
+
+
+def render_contribution_calendar(calendar: dict) -> str:
+    """
+    Render a dark GitHub-style contribution calendar SVG.
+    """
+    weeks = calendar.get("weeks", [])
+    total = int(calendar.get("totalContributions", 0))
+
+    width = 960
+    height = 216
+    graph_left = 86
+    graph_top = 78
+    cell = 12
+    gap = 4
+    step = cell + gap
+
+    month_labels = contribution_month_labels(weeks, graph_left, step)
+    weekday_labels = "\n".join(
+        [
+            '<text class="weekday" x="24" y="102">Mon</text>',
+            '<text class="weekday" x="24" y="134">Wed</text>',
+            '<text class="weekday" x="24" y="166">Fri</text>',
+        ]
+    )
+
+    cells = []
+    for week_index, week in enumerate(weeks):
+        for day in week.get("contributionDays", []):
+            weekday = int(day.get("weekday", 0))
+            count = int(day.get("contributionCount", 0))
+            date = escape(str(day.get("date", "")))
+            x = graph_left + week_index * step
+            y = graph_top + weekday * step
+            color = contribution_fill(day)
+            cells.append(
+                f'<rect class="day" x="{x}" y="{y}" width="{cell}" height="{cell}" '
+                f'rx="3" fill="{color}"><title>{date}: {count} contributions</title></rect>'
+            )
+
+    legend_x = width - 224
+    legend_y = height - 39
+    legend_colors = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"]
+    legend_cells = []
+    for index, color in enumerate(legend_colors):
+        legend_cells.append(
+            f'<rect x="{legend_x + 48 + index * 18}" y="{legend_y - 12}" '
+            f'width="12" height="12" rx="3" fill="{color}"></rect>'
+        )
+
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" aria-label="{total:,} contributions in the last year">
+<style>
+  .bg {{ fill: #0d1117; }}
+  .border {{ fill: none; stroke: #30363d; stroke-width: 1; }}
+  .title {{ fill: #f0f6fc; font: 700 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+  .month, .weekday, .legend {{ fill: #c9d1d9; font: 600 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }}
+  .legend {{ fill: #8b949e; }}
+  .day {{ shape-rendering: geometricPrecision; }}
+</style>
+<rect class="bg" x="0" y="0" width="{width}" height="{height}" rx="8"></rect>
+<rect class="border" x="0.5" y="0.5" width="{width - 1}" height="{height - 1}" rx="8"></rect>
+<text class="title" x="24" y="34">{total:,} contributions in the last year</text>
+{month_labels}
+{weekday_labels}
+{''.join(cells)}
+<text class="legend" x="{legend_x}" y="{legend_y}">Less</text>
+{''.join(legend_cells)}
+<text class="legend" x="{legend_x + 148}" y="{legend_y}">More</text>
+</svg>
+"""
 
 
 ################################################################################
@@ -115,6 +244,18 @@ async def generate_kpis(s: Stats) -> None:
         f.write(output)
 
 
+async def generate_contributions(s: Stats) -> None:
+    """
+    Generate a dark GitHub-style contribution heatmap.
+    :param s: Represents user's GitHub statistics
+    """
+    output = render_contribution_calendar(await s.contribution_calendar)
+
+    generate_output_folder()
+    with open("generated/contributions.svg", "w") as f:
+        f.write(output)
+
+
 ################################################################################
 # Main Function
 ################################################################################
@@ -158,6 +299,7 @@ async def main() -> None:
         await generate_languages(s)
         await generate_overview(s)
         await generate_kpis(s)
+        await generate_contributions(s)
 
 
 if __name__ == "__main__":
