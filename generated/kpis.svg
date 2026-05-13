@@ -50,11 +50,11 @@
 
 <circle class="pink" cx="331" cy="157" r="6"/>
 <text class="label" x="347" y="162">FOLLOWERS</text>
-<text class="value" x="329" y="199">19</text>
+<text class="value" x="329" y="199">18</text>
 
 <circle class="yellow" cx="610" cy="157" r="6"/>
 <text class="label" x="626" y="162">PUBLIC REPOS</text>
 <text class="value" x="608" y="199">64</text>
 
-<text class="meta" x="24" y="233">updated 2026-05-12</text>
+<text class="meta" x="24" y="233">updated 2026-05-13</text>
 </svg>
