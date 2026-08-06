@@ -46,7 +46,7 @@
 
 <circle class="orange" cx="52" cy="157" r="6"/>
 <text class="label" x="68" y="162">FORKS</text>
-<text class="value" x="50" y="199">12</text>
+<text class="value" x="50" y="199">13</text>
 
 <circle class="pink" cx="331" cy="157" r="6"/>
 <text class="label" x="347" y="162">FOLLOWERS</text>
@@ -56,5 +56,5 @@
 <text class="label" x="626" y="162">PUBLIC REPOS</text>
 <text class="value" x="608" y="199">70</text>
 
-<text class="meta" x="24" y="233">updated 2026-08-05</text>
+<text class="meta" x="24" y="233">updated 2026-08-06</text>
 </svg>
